@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Restores full clickhouse server into default locations
+#
+# To restore single database use DBNAME/restore.sh NEWDBNAME [DATA_ROOT]
+
+<%= templates["_common_functions"] %>
+
+DATA_ROOT=$1
+
+<%= templates["_check_user_perm"] %>
+
+CURDIR=`pwd`
+
+for DATABASE_DIR in */ ; do
+    DATABASE=$(echo ${DATABASE_DIR} | sed 's/\/$//')
+
+    cd ${CURDIR}/${DATABASE_DIR}
+
+    /bin/bash restore.sh ${DATABASE} ${DATA_ROOT}
+
+    cd ${CURDIR}
+done

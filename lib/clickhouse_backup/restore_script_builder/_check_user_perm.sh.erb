@@ -1,0 +1,21 @@
+#@IgnoreInspection BashAddShebang
+DEFAULT_DATA_ROOT="/var/lib/clickhouse/data"
+
+if [[ -z "$DATA_ROOT" ]] ; then
+    DATA_ROOT=${DEFAULT_DATA_ROOT}
+fi
+
+if [[ ! -d "$DATA_ROOT" ]] ; then
+    log_error "Cannot find clickhouse data root directory"
+    log_info "Provide correct DATA_ROOT as last argument to script"
+    log_info "  current DATA_ROOT=$DATA_ROOT"
+
+    exit 1
+fi
+
+check_permission ${DATA_ROOT}
+if (( $? != 0 )) ; then
+    log_error "Current user cannot write to DATA_ROOT."
+    log_info "Run script under appropriate user (and do not use 'root' user)."
+    exit 1
+fi

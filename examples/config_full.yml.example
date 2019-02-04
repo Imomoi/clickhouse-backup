@@ -1,0 +1,30 @@
+---
+clickhouse:
+  connection:
+    scheme: http
+    host: localhost
+    port: 8123
+  shadow: "/var/lib/clickhouse/shadow"
+# metadata: "IN_DOCKER_PATH:HOST_PATH"
+# metadata: "PATH"
+  metadata: "/var/lib/clickhouse/metadata"
+
+backup:
+  archive-prefix: ''
+  temp-file-location: "~/"
+
+destinations:
+
+    s3:
+      bucket: 'test'
+      key: ''
+      secret: ''
+      region: ''
+
+# log levels: DEBUG, INFO, WARN, ERROR
+log_level: DEBUG
+
+ignored_databases:
+  - default
+  - system
+  - healthmon

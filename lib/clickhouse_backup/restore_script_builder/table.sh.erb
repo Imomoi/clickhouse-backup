@@ -1,0 +1,64 @@
+#!/bin/bash
+
+<%= templates["_common_functions"] %>
+
+if [[ -z "$1" ]] || [[ -z "$2" ]] ; then
+    echo "Script usage:"
+    echo "sh ./restore.sh database_name table_name [clickhouse_data_path]"
+    echo ""
+    echo "  database_name - database where data will be restored"
+    echo "  table_name - table_name where data will be restored"
+    echo "  clickhouse_data_path - path to clickhouse data directory"
+    echo ""
+    echo ""
+    echo "Database and table should be created before running this script"
+
+    exit 1
+fi
+
+CURDIR=`pwd`
+DATABASE=$1
+TABLE=$2
+DATA_ROOT=$3
+
+<%= templates["_check_user_perm"] %>
+
+DB_DIR="$DATA_ROOT/$DATABASE"
+
+if [[ ! -d "$DB_DIR" ]] ; then
+    log_error "Cannot find database directory"
+    log_info "Create database $DATABASE first or provide correct DATA_ROOT as 3rd argument to script"
+    log_info "  current DATA_ROOT=$DATA_ROOT"
+
+    exit 1
+fi
+
+TABLE_DIR="$DATA_ROOT/$DATABASE/$TABLE"
+
+if [[ ! -d "$TABLE_DIR" ]] ; then
+    log_error "Cannot find table directory"
+    log_info "Create table $TABLE in $DATABASE first or provide correct DATA_ROOT as 3rd argument to script"
+    log_info "  current DATA_ROOT=$DATA_ROOT"
+
+    exit 1
+fi
+
+if [[ ! -d "$TABLE_DIR/detached" ]] ; then
+    mkdir ${TABLE_DIR}/detached
+fi
+
+if df -P -- "$CURDIR" "$TABLE_DIR/detached" | awk 'NR==2 {dev1=$CURDIR} NR==3 {exit($CURDIR!=dev1)}'; then
+    # CURDIR and $TABLE_DIR/detached are on the same filesystem
+    # We will use hard links instead of full copy
+    log_debug "Files are on same file system. Using hard links"
+    cp --one-file-system --link --recursive --target-directory=${TABLE_DIR}/detached .
+else
+    # $CURDIR and $TABLE_DIR/detached are on different filesystems
+    log_debug "Files are on different file systems. Files would be copied..."
+    cp --recursive --target-directory=${TABLE_DIR}/detached .
+fi
+
+PARTITIONS=$(find . -type d | sed -E "s/\.\///g" | grep -v -e "\." | sed -n "s/^\([0-9]\{1,6\}\).*$/\1/p")
+for PARTITION in ${PARTITIONS} ; do
+    clickhouse-client --database ${DATABASE} --query="ALTER TABLE $DATABASE.$TABLE ATTACH PARTITION $PARTITION"
+done

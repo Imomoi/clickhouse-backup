@@ -1,0 +1,62 @@
+#@IgnoreInspection BashAddShebang
+COLOR_RED='\033[0;31m'
+COLOR_NC='\033[0m'
+COLOR_GRAY='\033[37m'
+
+log_error() {
+    printf "${COLOR_RED}ERROR: "
+    printf "$1${COLOR_NC}"
+    printf '\n'
+}
+
+log_info() {
+    printf "${COLOR_NC}INFO : "
+    printf "$1"
+    printf '\n'
+}
+
+log_debug() {
+    printf "${COLOR_GRAY}DEBUG: "
+    printf "$1${COLOR_NC}"
+    printf '\n'
+}
+
+# Check if current user has write permission to specific directory
+#
+# Parameters:
+#   $1 - directory
+#
+# Returns 0 if user has write permission, else 1
+check_permission() {
+    USER=`whoami`
+    DIR=$1
+
+    # Use -L to get information about the target of a symlink,
+    # not the link itself, as pointed out in the comments
+    INFO=($(stat -L -c "%a %G %U" ${DIR}))
+    PERM=${INFO[0]}
+    GROUP=${INFO[1]}
+    OWNER=${INFO[2]}
+
+    if (( ($PERM & 0002) != 0 )); then
+        # Everyone has write access
+        return 0
+    elif (( ($PERM & 0020) != 0 )); then
+        # Some group has write access.
+        # Is user in that group?
+        gs=( $(groups ${USER}) )
+        for g in "${gs[@]}"; do
+            if [[ ${GROUP} == ${g} ]]; then
+                return 0
+            fi
+        done
+    elif (( ($PERM & 0200) != 0 )); then
+        # The owner has write access.
+        # Does the user own the file?
+        if [[ ${USER} == ${OWNER} ]] ; then
+            return 0
+        fi
+    fi
+
+    return 1
+}

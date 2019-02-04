@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Restores all tables in single database to DBNAME
+#
+# DBNAME should be passed in first argument to this script
+#
+# To restore single table use TABLEMAME/restore.sh NEWDBNAME NEWTABLENAME [DATA_ROOT]
+
+<%= templates["_common_functions"] %>
+
+if [[ -z "$1" ]] ; then
+    echo ""
+    echo ""
+    echo ""
+    echo "Script usage:"
+    echo "sh ./restore.sh database_name [clickhouse_data_path]"
+    echo ""
+    echo "  database_name - database where data will be restored"
+    echo "  clickhouse_data_path - path to clickhouse data directory"
+
+    exit 1
+fi
+
+CURDIR=`pwd`
+DATABASE=$1
+DATA_ROOT=$2
+
+<%= templates["_check_user_perm"] %>
+
+log_debug "Restoring database: $DATABASE"
+clickhouse-client --query="CREATE DATABASE ${DATABASE}"
+
+# for TABLE_DIR in */ ; do
+#     TABLE=$(echo ${TABLE_DIR} | sed 's/\/$//')
+
+for TABLE_DIR in *.sql ; do
+    TABLE=$(echo ${TABLE_DIR} | sed 's/\.sql$//')
+
+    log_debug "Restoring table: $DATABASE.$TABLE"
+
+    sed 's/ATTACH/CREATE/g' ${CURDIR}/${TABLE}.sql | sed 's/<%= db_name %>/'${DATABASE}'/g' ${CURDIR}/${TABLE}.sql | clickhouse-client --database ${DATABASE}
+
+    if [[ -d "$CURDIR/$TABLE" ]] ; then
+        cd ${CURDIR}/${TABLE}
+        /bin/bash restore.sh ${DATABASE} ${TABLE} ${DATA_ROOT}
+
+        cd ${CURDIR}
+    fi
+done

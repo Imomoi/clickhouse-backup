@@ -1,0 +1,4 @@
+config.yml
+.idea/
+spec/tmp/
+spec/test_config.yaml

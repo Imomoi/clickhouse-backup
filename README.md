@@ -4,6 +4,10 @@
 
 This application backup databases and tables from local clickhouse instance
 
+## Nice badges
+
+[![Maintainability](https://api.codeclimate.com/v1/badges/f4e295473446f1e13a64/maintainability)](https://codeclimate.com/github/Imomoi/clickhouse-backup/maintainability)
+
 ## Usage
 
 To run application:

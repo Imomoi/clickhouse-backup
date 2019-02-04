@@ -7,9 +7,10 @@ gemspec
 gem 'concurrent-ruby', '1.0.5'
 
 group :development do
-  gem 'rubocop'
+  gem 'rubocop', require: false
 end
 
 group :development, :test do
   gem 'rspec'
+  gem 'simplecov', require: false
 end

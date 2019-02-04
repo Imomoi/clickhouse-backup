@@ -28,12 +28,10 @@ module ClickhouseBackup
 
     def write_db_restore_scripts(table_descriptions)
       table_descriptions.collect(&:database).uniq.each do |db|
-        script_template = templates[File.basename(f, FILE_EXTENSION)] = File.read(f)
-        template_data = OpenStruct.new
-        template_data.db_name = db
-        template_data.rendered_templates = templates
-        ERB.new(script_template, 0, '-%<>').result(binding)
-        tar_writer.write_data("#{db}/restore.sh", rendered_templates['db'])
+        script_template = templates['db']
+        template_data = OpenStruct.new(db_name: db, rendered_templates: templates)
+        rendered_template = ERB.new(script_template, 0, '-%<>').result(binding)
+        tar_writer.write_data("#{db}/restore.sh", rendered_template)
       end
     end
 

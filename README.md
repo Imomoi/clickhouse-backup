@@ -36,7 +36,8 @@ Cause of specific Clickhouse behaviour Multi-User installed RVM is required (not
 
 Now download application from bitbucket and install dependencies
 
-    ~/$ git clone git@bitbucket.org:mediaparts/infrastructure.clickhouse_backup.git
+    ~/$ git clone https://github.com/Imomoi/clickhouse-backup.git infrastructure.clickhouse_backup
+    
 
 Install and use latest stable Ruby 2.5 for clickhouse user. Run this commands
 

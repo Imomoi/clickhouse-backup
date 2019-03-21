@@ -22,7 +22,11 @@ module ClickhouseBackup
       extend ClassMethods
 
       def freeze
-        query = "ALTER TABLE #{database}.#{table} FREEZE PARTITION ID '#{partition}'"
+        query = if (partition == 'tuple()')
+          "ALTER TABLE #{database}.#{table} FREEZE"
+        else
+          "ALTER TABLE #{database}.#{table} FREEZE PARTITION ID '#{partition}'"
+        end
         Clickhouse.connection.execute query
       rescue Clickhouse::QueryError => e
         ClickhouseBackup.logger.debug { "Cannot freeze #{database}.#{table}.#{partition} cause #{e.message}" }

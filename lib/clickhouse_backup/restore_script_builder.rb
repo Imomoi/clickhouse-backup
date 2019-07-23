@@ -3,20 +3,21 @@
 require 'erb'
 
 module ClickhouseBackup
+  # Parameters for restore scripts
   class TemplateParams
     attr_reader :db_name
     attr_reader :templates
-    
+
     def initialize(db_name, templates)
       @db_name = db_name
       @templates = templates
     end
-    
+
     def binding
       super
     end
   end
-  
+
   # Module for making real backup archive
   class RestoreScriptBuilder
     attr_reader :tar_writer, :templates
@@ -37,12 +38,12 @@ module ClickhouseBackup
     end
 
     private
-    
+
     def write_full_restore
       script_template = templates['all']
       template_data = TemplateParams.new(nil, templates)
       rendered_template = ERB.new(script_template, 0, '-%<>').result(template_data.binding)
-      tar_writer.write_data("restore.sh", rendered_template)
+      tar_writer.write_data('restore.sh', rendered_template)
     end
 
     def write_db_restore_scripts(table_descriptions)

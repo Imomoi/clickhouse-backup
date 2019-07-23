@@ -101,7 +101,7 @@ module ClickhouseBackup
     end
 
     def show_clickhouse_incompatible
-      logger.error "Not compatible Clickhouase version. Please update it or open ticket to support your version.\n"
+      logger.error "Not compatible Clickhouse version. Please update it or open ticket to support your version.\n"
       logger.error "Additional info:\n"
       logger.error "Table description fields: #{ClickhouseBackup::Models::TableDescription.fields.map(&:to_s)}"
       exit(0)

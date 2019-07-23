@@ -25,7 +25,7 @@ module ClickhouseBackup
         query = if (partition == 'tuple()')
           "ALTER TABLE #{database}.#{table} FREEZE"
         else
-          "ALTER TABLE #{database}.#{table} FREEZE PARTITION ID '#{partition}'"
+          "ALTER TABLE #{database}.#{table} FREEZE PARTITION #{partition}"
         end
         Clickhouse.connection.execute query
       rescue Clickhouse::QueryError => e

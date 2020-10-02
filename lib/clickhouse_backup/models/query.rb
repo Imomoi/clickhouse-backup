@@ -16,8 +16,8 @@ module ClickhouseBackup
 
         res = ClickHouse.connection.select_all(query)
 
-        puts "Query: ${query}"
-        puts "Res: ${res}"
+        puts "Query: #{query}"
+        puts "Res: #{res}"
 
         res.each do |x|
           yield parse_raw_row(x)
@@ -51,12 +51,9 @@ module ClickhouseBackup
       def build_query
         where_query = where_query_from_options(query_options)
 
-        query = {
-          from: table.table_name,
-          select: select_fields_from_options(query_options)
-        }
+        query = "SELECT #{select_fields_from_options(query_options)} from #{table.table_name}"
 
-        query[:where] = where_query if where_query
+        query += " #{where_query}" if where_query
         query
       end
 

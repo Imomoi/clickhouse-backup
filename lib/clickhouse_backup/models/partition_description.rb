@@ -14,8 +14,8 @@ module ClickhouseBackup
 
         def for_table(table)
           if !@___fields
-            @___fields = ['partition']
-            attr_accessor :partition
+            @___fields = ['partition', 'database', 'table']
+            @___fields.each {|x| attr_accessor x}
           end
 
           all

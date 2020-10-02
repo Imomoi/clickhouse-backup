@@ -43,7 +43,7 @@ module ClickhouseBackup
       end
 
       def freezable?
-        return false if data_path.blank? || ClickhouseBackup.ignored_databases.include?(database)
+        return false if data_path.empty? || ClickhouseBackup.ignored_databases.include?(database)
 
         begin
           query = "SHOW CREATE TABLE #{database}.#{name}"

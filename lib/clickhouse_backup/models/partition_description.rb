@@ -14,7 +14,7 @@ module ClickhouseBackup
 
         def for_table(table)
           all
-            .where("active and database = #{table.database} and table = #{table.name}")
+            .where("active and database = '#{table.database}' and table = '#{table.name}'")
             .to_a
             .uniq(&:partition)
         end

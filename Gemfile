@@ -4,7 +4,7 @@ source 'http://www.rubygems.org'
 
 gemspec
 
-gem 'concurrent-ruby', '1.1.5'
+gem 'concurrent-ruby', '1.1.7'
 
 group :development do
   gem 'rubocop', require: false

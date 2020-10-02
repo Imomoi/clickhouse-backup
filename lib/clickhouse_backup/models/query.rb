@@ -49,7 +49,7 @@ module ClickhouseBackup
 
         query = "SELECT #{select_fields_from_options(query_options)} from #{table.table_name}"
 
-        query += " #{where_query}" if where_query
+        query += " WHERE #{where_query}" if where_query
         query
       end
 

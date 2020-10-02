@@ -47,8 +47,9 @@ module ClickhouseBackup
 
         begin
           query = "SHOW CREATE TABLE #{database}.#{name}"
-          @create_query = ClickHouse.connection.execute(query).flatten.first
-        rescue Clickhouse::QueryError
+          @create_query = ClickHouse.connection.select_all(query)
+          puts @create_query.inspect
+        rescue
           return false
         end
 

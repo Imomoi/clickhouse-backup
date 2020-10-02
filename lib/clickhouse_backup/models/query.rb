@@ -27,8 +27,7 @@ module ClickhouseBackup
 
         query.query_options = query_options || {}
 
-        where_hash = ((query_options || {})[:where] || {})
-        query.query_options[:where] = where_hash.merge(options)
+        query.query_options[:where] = options
 
         query
       end

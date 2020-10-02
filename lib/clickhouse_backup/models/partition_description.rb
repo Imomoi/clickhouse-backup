@@ -13,6 +13,11 @@ module ClickhouseBackup
         attr_accessor :ignored_databases
 
         def for_table(table)
+          if !@___fields
+            @___fields = ['partition']
+            attr_accessor :partition
+          end
+
           all
             .where("active and database = '#{table.database}' and table = '#{table.name}'")
             .to_a

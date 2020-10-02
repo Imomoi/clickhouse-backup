@@ -30,8 +30,7 @@ module ClickhouseBackup
           return if @___fields
 
           res = ClickHouse.connection.select_all 'DESCRIBE TABLE ' + table_name
-          puts res
-          fields = res.map { |x| x[0] }
+          fields = res.map { |x| x["name"] }
 
           class_eval do
             fields.each do |f|

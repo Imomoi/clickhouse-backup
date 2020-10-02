@@ -17,7 +17,7 @@ module ClickhouseBackup
         res = ClickHouse.connection.select_all(query)
 
         puts "Query: #{query}"
-        puts "Res: #{res}"
+        puts "Res: #{res.inspect}"
 
         res.each do |x|
           yield parse_raw_row(x)
@@ -41,8 +41,8 @@ module ClickhouseBackup
       def parse_raw_row(raw_row)
         rec = table.new
 
-        raw_row.each_with_index do |val, i|
-          rec.send("#{fields[i]}=", val)
+        raw_row.each do |field, value|
+          rec.send("#{field}=", value)
         end
 
         rec

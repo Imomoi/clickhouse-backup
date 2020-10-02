@@ -107,7 +107,7 @@ module ClickhouseBackup
     end
 
     def backup_needed?
-      !table_descriptions.blank?
+      !table_descriptions.empty?
     end
 
     def clickhouse_compatible?

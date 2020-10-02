@@ -16,8 +16,6 @@ module ClickhouseBackup
 
         res = ClickHouse.connection.select_all(query)
 
-        puts "Query: #{query}"
-
         res.each do |x|
           yield parse_raw_row(x)
         end

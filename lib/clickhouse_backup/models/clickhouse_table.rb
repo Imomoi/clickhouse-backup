@@ -30,10 +30,10 @@ module ClickhouseBackup
           return if @___fields
 
           res = ClickHouse.connection.select_all 'DESCRIBE TABLE ' + table_name
-          fields = res.map { |x| x["name"] }
+          fields = res.map { |x| x['name'] }
 
           class_eval do
-            fields.each do |f|
+            fields.select(|x| !x.include?('.')).each do |f|
               attr_accessor f
             end
           end

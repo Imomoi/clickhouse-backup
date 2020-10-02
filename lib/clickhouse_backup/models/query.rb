@@ -14,7 +14,10 @@ module ClickhouseBackup
       def each
         query = build_query
 
-        res = Clickhouse.connection.select_rows(query)
+        res = Clickhouse.connection.select_all(query)
+
+        puts "Query: ${query}"
+        puts "Res: ${res}"
 
         res.each do |x|
           yield parse_raw_row(x)

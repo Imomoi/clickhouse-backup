@@ -27,7 +27,7 @@ module ClickhouseBackup
                 else
                   "ALTER TABLE #{database}.#{table} FREEZE PARTITION #{partition}"
                 end
-        Clickhouse.connection.execute query
+        ClickHouse.connection.execute query
       rescue Clickhouse::QueryError => e
         ClickhouseBackup.logger.debug { "Cannot freeze #{database}.#{table}.#{partition} cause #{e.message}" }
       end

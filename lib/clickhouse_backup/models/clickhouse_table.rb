@@ -29,8 +29,7 @@ module ClickhouseBackup
         def describe
           return if @___fields
 
-          res = Clickhouse.connection.query 'DESCRIBE TABLE ' + table_name
-
+          res = ClickHouse.connection.select_all 'DESCRIBE TABLE ' + table_name
           fields = res.map { |x| x[0] }
 
           class_eval do

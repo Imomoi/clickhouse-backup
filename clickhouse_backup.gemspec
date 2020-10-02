@@ -18,5 +18,5 @@ Gem::Specification.new do |spec|
   spec.require_path = 'lib'
 
   spec.add_runtime_dependency 'aws-sdk-s3', '1.82.0'
-  spec.add_runtime_dependency 'clickhouse', '0.1.10'
+  spec.add_runtime_dependency 'click_house'
 end

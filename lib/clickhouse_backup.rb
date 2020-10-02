@@ -19,7 +19,7 @@ module ClickhouseBackup
     REQUIRED_METHODS = %i[
       database
       name
-      data_path
+      data_paths
       metadata_path
     ].freeze
 
@@ -85,8 +85,7 @@ module ClickhouseBackup
     def read_configuration(configuration_file_path)
       @___configuration = YAML.safe_load(File.open(configuration_file_path))
 
-      Clickhouse.logger = logger
-      Clickhouse.establish_connection(configuration['clickhouse']['connection'])
+      ClickHouse.config.assign(configuration['clickhouse']['connection'].merge(logger: logger))
     end
 
     def ignored_databases

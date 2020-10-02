@@ -38,7 +38,7 @@ module ClickhouseBackup
         rec = table.new
 
         raw_row.each do |field, value|
-          rec.send("#{field}=", value)
+          rec.send("#{field}=", value) unless field.include?('.')
         end
 
         rec

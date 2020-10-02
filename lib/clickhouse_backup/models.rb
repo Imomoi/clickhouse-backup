@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'clickhouse'
+require 'click_house'
 
 Dir[File.join(__dir__, 'models', '*.rb')].each do |f|
   require f

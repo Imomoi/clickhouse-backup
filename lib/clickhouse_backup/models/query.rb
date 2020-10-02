@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'clickhouse'
+require 'click_house'
 
 module ClickhouseBackup
   module Models
@@ -14,7 +14,7 @@ module ClickhouseBackup
       def each
         query = build_query
 
-        res = Clickhouse.connection.select_all(query)
+        res = ClickHouse.connection.select_all(query)
 
         puts "Query: ${query}"
         puts "Res: ${res}"

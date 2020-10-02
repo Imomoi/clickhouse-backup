@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'clickhouse'
+require 'click_house'
 require 'logger'
 require 'yaml'
 

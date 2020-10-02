@@ -14,7 +14,7 @@ module ClickhouseBackup
     # * name String
     # * engine String
     # * is_temporary UInt8
-    # * data_path String
+    # * data_paths String
     # * metadata_path String
     class TableDescription < ClickhouseBackup::Models::ClickhouseTable
       self.table_name = 'system.tables'
@@ -43,7 +43,7 @@ module ClickhouseBackup
       end
 
       def freezable?
-        return false if data_path.empty? || ClickhouseBackup.ignored_databases.include?(database)
+        return false if data_paths.empty? || ClickhouseBackup.ignored_databases.include?(database)
 
         begin
           query = "SHOW CREATE TABLE #{database}.#{name}"

@@ -2,7 +2,7 @@
 
 require 'click_house'
 
-Dir[File.join(__dir__, 'models', '*.rb')].each do |f|
+Dir[File.join(__dir__, 'models', '*.rb')].sort.each do |f|
   require f
 end
 

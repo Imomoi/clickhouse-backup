@@ -33,7 +33,7 @@ module ClickhouseBackup
           fields = res.map { |x| x['name'] }
 
           class_eval do
-            fields.select{|x| !x.include?('.')}.each do |f|
+            fields.reject { |x| x.include?('.') }.each do |f|
               attr_accessor f
             end
           end

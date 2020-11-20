@@ -4,11 +4,11 @@ require 'click_house'
 require 'logger'
 require 'yaml'
 
-Dir[File.join(__dir__, 'clickhouse_backup', '*.rb')].each do |f|
+Dir[File.join(__dir__, 'clickhouse_backup', '*.rb')].sort.each do |f|
   require f
 end
 
-Dir[File.join(__dir__, 'clickhouse_patches', '*.rb')].each do |f|
+Dir[File.join(__dir__, 'clickhouse_patches', '*.rb')].sort.each do |f|
   require f
 end
 
@@ -67,7 +67,26 @@ module ClickhouseBackup
     end
 
     def write_archive
-      tar_writer = ClickhouseBackup::TarWriter.new(archive_name)
+      IO.pipe do |rd, wr|
+        if fork
+          wr.close
+
+          write_chunked_file(rd)
+
+          rd.close
+        else
+          rd.close
+
+          make_archive_stream(wr)
+
+          wr.flush
+          wr.close
+        end
+      end
+    end
+
+    def make_archive_stream(wr)
+      tar_writer = ClickhouseBackup::TarWriter.new(wr)
 
       archive_maker = ClickhouseBackup::ArchiveMaker.new(tar_writer)
       archive_maker.make_archive(find_shadow_files, find_schema_files)
@@ -76,6 +95,38 @@ module ClickhouseBackup
       restore_writer.write_restore_scripts(table_descriptions)
 
       tar_writer.close
+    end
+
+    def write_chunked_file(rd)
+      max_blocks_to_read = 1024
+
+      current_chunk = 0
+      current_read_block = 0
+
+      read_next = true
+
+      while read_next
+        current_file = if current_read_block >= max_blocks_to_read || current_chunk.zero?
+                         if current_file
+                           current_file.flush
+                           current_file.close
+                         end
+                         current_chunk += 1
+                         current_read_block = 0
+                         File.open(format(archive_name, current_chunk), 'wab')
+                       else
+                         current_file
+                       end
+
+        if rd.eof?
+          read_next = false
+          current_file.flush
+          current_file.close
+        else
+          current_file << rd.read(1024 * 1024)
+          current_read_block += 1
+        end
+      end
     end
 
     def shadow_path
@@ -167,7 +218,7 @@ module ClickhouseBackup
     def tar_file_name
       archive_idx = Time.now.strftime('%Y%m%d%H%M%S')
       archive_prefix = ClickhouseBackup.configuration['backup']['archive-prefix'] || ''
-      "#{archive_prefix}#{archive_idx}.tar"
+      "#{archive_prefix}#{archive_idx}.%05d.tar"
     end
 
     def archive_location

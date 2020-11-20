@@ -13,9 +13,9 @@ module ClickhouseBackup
         attr_accessor :ignored_databases
 
         def for_table(table)
-          if !@___fields
-            @___fields = ['partition', 'database', 'table']
-            @___fields.each {|x| attr_accessor x}
+          unless @___fields
+            @___fields = %w[partition database table]
+            @___fields.each { |x| attr_accessor x }
           end
 
           all
@@ -33,7 +33,7 @@ module ClickhouseBackup
                   "ALTER TABLE #{database}.#{table} FREEZE PARTITION #{partition}"
                 end
         ClickHouse.connection.execute query
-      rescue => e
+      rescue StandardError => e
         ClickhouseBackup.logger.debug { "Cannot freeze #{database}.#{table}.#{partition} cause #{e.message}" }
       end
     end

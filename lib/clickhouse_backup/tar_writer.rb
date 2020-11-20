@@ -7,10 +7,9 @@ module ClickhouseBackup
   class TarWriter
     BLOCKSIZE_TO_READ = 1024 * 1024
 
-    attr_accessor :tar, :archive_file
+    attr_accessor :tar
 
-    def initialize(archive_name)
-      self.archive_file = File.open archive_name, 'wb'
+    def initialize(archive_file)
       self.tar = Gem::Package::TarWriter.new archive_file
     end
 
@@ -33,8 +32,6 @@ module ClickhouseBackup
     def close
       tar.flush
       tar.close
-      archive_file.flush
-      archive_file.close
     end
 
     private

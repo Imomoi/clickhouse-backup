@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir.glob('{bin,lib}/**/*')
   spec.executables  = ['clickhouse_backup']
   spec.require_path = 'lib'
-  spec.required_ruby_version = '~2.5'
+  # spec.required_ruby_version = '~2.5'
 
   spec.add_runtime_dependency 'aws-sdk-s3', '1.82.0'
   spec.add_runtime_dependency 'click_house'

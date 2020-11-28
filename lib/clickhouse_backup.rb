@@ -68,12 +68,14 @@ module ClickhouseBackup
     def write_archive
       IO.pipe do |rd, wr|
         if fork
+          logger.info { "Reader process running" }
           wr.close
 
           write_chunked_file(rd)
 
           rd.close
         else
+          logger.info { "Writer process running" }
           rd.close
 
           make_archive_stream(wr)
@@ -117,15 +119,18 @@ module ClickhouseBackup
                          current_chunk += 1
                          current_read_block = 0
                          current_archive_name = format(archive_name, current_chunk)
-                         File.open(current_archive_name, 'wab')
+                         File.open(current_archive_name, 'wb')
                        else
                          current_file
                        end
 
         if rd.eof?
+          logger.info { "TAR stream EOF reached" }
           read_next = false
           current_file.flush
           current_file.close
+          upload_to_s3(current_archive_name)
+          cleanup_file(current_archive_name)
         else
           current_file << rd.read(block_1mb)
           current_read_block += 1

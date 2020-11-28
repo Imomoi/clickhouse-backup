@@ -66,9 +66,10 @@ module ClickhouseBackup
     end
 
     def write_archive
+      p1, p2, p3 = nil, nil, nil
       IO.pipe do |archive_stream_reader, archive_stream_writer|
         IO.pipe do |in_names, out_names|
-          fork do
+          p1 = fork do
             logger.info { "Reader process running" }
             archive_stream_writer.close
             in_names.close
@@ -81,7 +82,8 @@ module ClickhouseBackup
             out_names.close
           end
 
-          fork do
+          p2 = fork do
+            logger.error { "Uploader process running" }
             out_names.close
 
             upload_part(in_names)
@@ -90,7 +92,7 @@ module ClickhouseBackup
           end
         end
 
-        fork do
+        p3 = fork do
           logger.info { "Writer process running" }
           archive_stream_reader.close
 
@@ -99,9 +101,11 @@ module ClickhouseBackup
           archive_stream_writer.flush
           archive_stream_writer.close
         end
-
-        Process.waitall
       end
+
+      Process.wait(p1)
+      Process.wait(p2)
+      Process.wait(p3)
     end
 
     def make_archive_stream(wr)
@@ -159,7 +163,6 @@ module ClickhouseBackup
     
     def upload_part(out_names)
       while next_name = out_names.gets
-
         upload_to_s3(current_archive_name.strip)
         cleanup_file(current_archive_name.strip)
 

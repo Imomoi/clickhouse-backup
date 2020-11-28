@@ -170,9 +170,9 @@ module ClickhouseBackup
     end
 
     
-    def upload_part(names_writer)
-      while !names_writer.eof?
-        next_name = names_writer.gets
+    def upload_part(names_reader)
+      while !names_reader.eof?
+        next_name = names_reader.gets
 
         if (next_name)
           STDERR.puts next_name

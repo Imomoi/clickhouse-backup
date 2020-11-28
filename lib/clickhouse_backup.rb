@@ -70,7 +70,7 @@ module ClickhouseBackup
       IO.pipe do |archive_stream_reader, archive_stream_writer|
         IO.pipe do |in_names, out_names|
           p1 = fork do
-            logger.info { "Reader process running" }
+            STDERR.puts "Reader process running"
             archive_stream_writer.close
             in_names.close
 
@@ -80,26 +80,31 @@ module ClickhouseBackup
             
             out_names.flush
             out_names.close
+
+            STDERR.puts "Reader process finished"
           end
 
           p2 = fork do
-            logger.error { "Uploader process running" }
+            STDERR.puts "Uploader process running"
             out_names.close
 
             upload_part(in_names)
 
             in_names.close
+            STDERR.puts "Uploader process finished"
           end
         end
 
         p3 = fork do
-          logger.info { "Writer process running" }
+          STDERR.puts "Writer process running"
           archive_stream_reader.close
 
           make_archive_stream(archive_stream_writer)
 
           archive_stream_writer.flush
           archive_stream_writer.close
+
+          STDERR.puts "Writer process finished"
         end
       end
 
@@ -135,8 +140,8 @@ module ClickhouseBackup
                          if current_file
                            current_file.flush
                            current_file.close
-                           maked_archives.write(current_archive_name)
-                           maked_archives.write('\n')
+                           maked_archives << current_archive_name
+                           maked_archives << '\n'
                          end
                          current_chunk += 1
                          current_read_block = 0
@@ -151,8 +156,8 @@ module ClickhouseBackup
           read_next = false
           current_file.flush
           current_file.close
-          maked_archives.write(current_archive_name)
-          maked_archives.write('\n')
+          maked_archives << current_archive_name
+          maked_archives << '\n'
         else
           current_file << rd.read(block_1mb)
           current_read_block += 1
@@ -162,10 +167,14 @@ module ClickhouseBackup
 
     
     def upload_part(out_names)
-      while next_name = out_names.gets
-        upload_to_s3(current_archive_name.strip)
-        cleanup_file(current_archive_name.strip)
+      while !out_names.eof?
+        next_name = out_names.gets
 
+        if (next_name)
+          STDERR.puts next_name
+          upload_to_s3(current_archive_name.strip)
+          cleanup_file(current_archive_name.strip)
+        end
       end
     end
 

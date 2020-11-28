@@ -67,14 +67,16 @@ module ClickhouseBackup
 
     def write_archive
       IO.pipe do |rd, wr|
-        if fork
+        fork do
           logger.info { "Reader process running" }
           wr.close
 
           write_chunked_file(rd)
 
           rd.close
-        else
+        end
+
+        fork do
           logger.info { "Writer process running" }
           rd.close
 
@@ -83,6 +85,8 @@ module ClickhouseBackup
           wr.flush
           wr.close
         end
+
+        Process.waitall
       end
     end
 
@@ -140,7 +144,7 @@ module ClickhouseBackup
       upload_pid = fork do
         upload_to_s3(current_archive_name)
        end
-       waitpid(upload_pid)
+       Process.wait(upload_pid)
        cleanup_file(current_archive_name)
     end
 

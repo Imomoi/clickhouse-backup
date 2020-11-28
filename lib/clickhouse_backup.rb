@@ -99,7 +99,7 @@ module ClickhouseBackup
     end
 
     def write_chunked_file(rd)
-      max_blocks_to_read = 10240
+      max_blocks_to_read = 50 * 1024 # Part size 50GB
       block_1mb = 1024*1024
 
       current_chunk = 0
@@ -113,8 +113,7 @@ module ClickhouseBackup
                          if current_file
                            current_file.flush
                            current_file.close
-                           upload_to_s3(current_archive_name)
-                           cleanup_file(current_archive_name)
+                           upload_part(current_archive_name)
                          end
                          current_chunk += 1
                          current_read_block = 0
@@ -129,13 +128,20 @@ module ClickhouseBackup
           read_next = false
           current_file.flush
           current_file.close
-          upload_to_s3(current_archive_name)
-          cleanup_file(current_archive_name)
+          upload_part(current_archive_name)
         else
           current_file << rd.read(block_1mb)
           current_read_block += 1
         end
       end
+    end
+
+    def upload_part(current_archive_name)
+      upload_pid = fork do
+        upload_to_s3(current_archive_name)
+       end
+       waitpid(upload_pid)
+       cleanup_file(current_archive_name)
     end
 
     def shadow_path

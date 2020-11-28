@@ -67,46 +67,50 @@ module ClickhouseBackup
 
     def write_archive
       p1, p2, p3 = nil, nil, nil
-      IO.pipe do |archive_stream_reader, archive_stream_writer|
-        IO.pipe do |in_names, out_names|
-          p1 = fork do
-            STDERR.puts "Reader process running"
-            archive_stream_writer.close
-            in_names.close
+      
+      archive_stream_reader, archive_stream_writer = IO.pipe
+      names_reader, names_writer = IO.pipe
+      
+      p1 = fork do
+        STDERR.puts "Reader process running"
+        archive_stream_writer.close
+        names_reader.close
 
-            write_chunked_file(archive_stream_reader, out_names)
+        write_chunked_file(archive_stream_reader, names_writer)
 
-            archive_stream_reader.close
-            
-            out_names.flush
-            out_names.close
+        archive_stream_reader.close
+        
+        names_writer.flush
+        names_writer.close
 
-            STDERR.puts "Reader process finished"
-          end
-
-          p2 = fork do
-            STDERR.puts "Uploader process running"
-            out_names.close
-
-            upload_part(in_names)
-
-            in_names.close
-            STDERR.puts "Uploader process finished"
-          end
-        end
-
-        p3 = fork do
-          STDERR.puts "Writer process running"
-          archive_stream_reader.close
-
-          make_archive_stream(archive_stream_writer)
-
-          archive_stream_writer.flush
-          archive_stream_writer.close
-
-          STDERR.puts "Writer process finished"
-        end
+        STDERR.puts "Reader process finished"
       end
+
+      p2 = fork do
+        STDERR.puts "Uploader process running"
+        archive_stream_writer.close
+        archive_stream_reader.close
+        names_writer.close
+
+        upload_part(names_reader)
+
+        names_reader.close
+        STDERR.puts "Uploader process finished"
+      end
+
+    p3 = fork do
+      STDERR.puts "Writer process running"
+      archive_stream_reader.close
+      names_reader.close
+      names_writer.close
+
+      make_archive_stream(archive_stream_writer)
+
+      archive_stream_writer.flush
+      archive_stream_writer.close
+
+      STDERR.puts "Writer process finished"
+    end
 
       Process.wait(p1)
       Process.wait(p2)
@@ -166,9 +170,9 @@ module ClickhouseBackup
     end
 
     
-    def upload_part(out_names)
-      while !out_names.eof?
-        next_name = out_names.gets
+    def upload_part(names_writer)
+      while !names_writer.eof?
+        next_name = names_writer.gets
 
         if (next_name)
           STDERR.puts next_name

@@ -38,10 +38,9 @@ module ClickhouseBackup
 
       write_archive
 
-      upload_to_s3(archive_name)
+      # upload_to_s3(archive_name)
 
       cleanup
-      cleanup_file(archive_name)
     end
 
     def cleanup_file(archive_name)
@@ -98,22 +97,27 @@ module ClickhouseBackup
     end
 
     def write_chunked_file(rd)
-      max_blocks_to_read = 1024
+      max_blocks_to_read = 10240
+      block_1mb = 1024*1024
 
       current_chunk = 0
       current_read_block = 0
 
       read_next = true
+      current_archive_name = "--"
 
       while read_next
         current_file = if current_read_block >= max_blocks_to_read || current_chunk.zero?
                          if current_file
                            current_file.flush
                            current_file.close
+                           upload_to_s3(current_archive_name)
+                           cleanup_file(current_archive_name)
                          end
                          current_chunk += 1
                          current_read_block = 0
-                         File.open(format(archive_name, current_chunk), 'wab')
+                         current_archive_name = format(archive_name, current_chunk)
+                         File.open(current_archive_name, 'wab')
                        else
                          current_file
                        end
@@ -123,7 +127,7 @@ module ClickhouseBackup
           current_file.flush
           current_file.close
         else
-          current_file << rd.read(1024 * 1024)
+          current_file << rd.read(block_1mb)
           current_read_block += 1
         end
       end

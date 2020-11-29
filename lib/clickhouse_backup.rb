@@ -72,9 +72,10 @@ module ClickhouseBackup
       names_reader, names_writer = IO.pipe
       
       p1 = fork do
-        STDERR.puts "Reader process running"
         archive_stream_writer.close
         names_reader.close
+
+        STDERR.puts "Reader process running"
 
         write_chunked_file(archive_stream_reader, names_writer)
 
@@ -87,10 +88,11 @@ module ClickhouseBackup
       end
 
       p2 = fork do
-        STDERR.puts "Uploader process running"
         archive_stream_writer.close
         archive_stream_reader.close
         names_writer.close
+
+        STDERR.puts "Uploader process running"
 
         upload_part(names_reader)
 
@@ -99,10 +101,11 @@ module ClickhouseBackup
       end
 
     p3 = fork do
-      STDERR.puts "Writer process running"
       archive_stream_reader.close
       names_reader.close
       names_writer.close
+
+      STDERR.puts "Writer process running"
 
       make_archive_stream(archive_stream_writer)
 
@@ -144,8 +147,7 @@ module ClickhouseBackup
                          if current_file
                            current_file.flush
                            current_file.close
-                           maked_archives << current_archive_name
-                           maked_archives << '\n'
+                           maked_archives.puts current_archive_name
                          end
                          current_chunk += 1
                          current_read_block = 0
@@ -160,8 +162,7 @@ module ClickhouseBackup
           read_next = false
           current_file.flush
           current_file.close
-          maked_archives << current_archive_name
-          maked_archives << '\n'
+          maked_archives.puts current_archive_name
         else
           current_file << rd.read(block_1mb)
           current_read_block += 1
@@ -174,10 +175,10 @@ module ClickhouseBackup
       while !names_reader.eof?
         next_name = names_reader.gets
 
-        if (next_name)
+        if (!next_name.strip.empty?)
           STDERR.puts next_name
-          upload_to_s3(current_archive_name.strip)
-          cleanup_file(current_archive_name.strip)
+          upload_to_s3(next_name.strip)
+          cleanup_file(next_name.strip)
         end
       end
     end

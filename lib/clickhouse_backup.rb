@@ -70,12 +70,12 @@ module ClickhouseBackup
       
       archive_stream_reader, archive_stream_writer = IO.pipe
       names_reader, names_writer = IO.pipe
-      
+
       p1 = fork do
         archive_stream_writer.close
         names_reader.close
 
-        STDERR.puts "Reader process running"
+        logger.info { "Reader process running" }
 
         write_chunked_file(archive_stream_reader, names_writer)
 
@@ -84,7 +84,7 @@ module ClickhouseBackup
         names_writer.flush
         names_writer.close
 
-        STDERR.puts "Reader process finished"
+        logger.info { "Reader process finished" }
       end
 
       p2 = fork do
@@ -92,28 +92,33 @@ module ClickhouseBackup
         archive_stream_reader.close
         names_writer.close
 
-        STDERR.puts "Uploader process running"
+        logger.info { "Uploader process running" }
 
         upload_part(names_reader)
 
         names_reader.close
-        STDERR.puts "Uploader process finished"
+        logger.info { "Uploader process finished" }
       end
 
-    p3 = fork do
+      p3 = fork do
+        archive_stream_reader.close
+        names_reader.close
+        names_writer.close
+
+        logger.info { "Writer process running" }
+
+        make_archive_stream(archive_stream_writer)
+
+        archive_stream_writer.flush
+        archive_stream_writer.close
+
+        logger.info { "Writer process finished" }
+      end
+
       archive_stream_reader.close
+      archive_stream_writer.close
       names_reader.close
       names_writer.close
-
-      STDERR.puts "Writer process running"
-
-      make_archive_stream(archive_stream_writer)
-
-      archive_stream_writer.flush
-      archive_stream_writer.close
-
-      STDERR.puts "Writer process finished"
-    end
 
       Process.wait(p1)
       Process.wait(p2)
@@ -133,7 +138,7 @@ module ClickhouseBackup
     end
 
     def write_chunked_file(rd, maked_archives)
-      max_blocks_to_read = 1024 # Part size 10GB
+      max_blocks_to_read = 10 * 1024 # Part size 10GB
       block_1mb = 1024*1024
 
       current_chunk = 0
@@ -176,7 +181,6 @@ module ClickhouseBackup
         next_name = names_reader.gets
 
         if (!next_name.strip.empty?)
-          STDERR.puts next_name
           upload_to_s3(next_name.strip)
           cleanup_file(next_name.strip)
         end

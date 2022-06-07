@@ -35,7 +35,7 @@ GEM
       multipart-post (>= 1.2, < 3)
     faraday_middleware (1.0.0)
       faraday (~> 1.0)
-    jmespath (1.4.0)
+    jmespath (1.6.1)
     multipart-post (2.1.1)
     parallel (1.19.2)
     parser (2.7.1.5)
